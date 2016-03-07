@@ -2,7 +2,7 @@ module OpenComponents
   # Wrapper object for components using the `unrendered` rendering mode.
   class UnrenderedComponent < Component
     # Internal: Default HTTP headers to send when requesting a component.
-    DEFAULT_HEADERS = {accept: 'application/vnd.oc.unrendered+json'}
+    DEFAULT_HEADERS = {'Accept' => 'application/vnd.oc.unrendered+json'}
 
     # Public: Returns a Hash of data to use when rendering the component.
     attr_reader :data
@@ -13,22 +13,19 @@ module OpenComponents
     # Public: Initializes a new UnrenderedComponent.
     #
     # name - The String name of the component to request.
-    # opts - A Hash of options to use when requesting the component
-    #   (default: {}).
-    #        :params  - A Hash of parameters to send in the component request
-    #          (optional, default: {}).
-    #        :version - The String version of the component to request
-    #          (optional, default: nil).
-    #        :headers - A Hash of HTTP request headers to include in the
-    #          component request (optional, default: DEFAULT_HEADERS).
-    def initialize(name, opts = {})
-      super(name, opts)
+    #
+    # Options
+    #   params  - A Hash of parameters to send in the component request (default: {}).
+    #   version - The String version of the component to request (default: nil).
+    #   headers - A Hash of HTTP request headers to include in the request (default: DEFAULT_HEADERS).
+    def initialize(name, params: {}, version: nil, headers: {})
+      super
 
       @headers.merge!(DEFAULT_HEADERS)
     end
 
     # Public: Executes a request for the Component against the configured
-    #   registry and sets the component attributes.
+    # registry and sets the component attributes.
     #
     # Examples
     #

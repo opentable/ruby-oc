@@ -1,8 +1,7 @@
 PATH
   remote: .
   specs:
-    opencomponents (0.5.0)
-      rest-client (~> 1.8)
+    opencomponents (1.0.0.pre)
 
 GEM
   remote: https://rubygems.org/
@@ -128,4 +127,4 @@ DEPENDENCIES
   webmock (~> 1.21)
 
 BUNDLED WITH
-   1.10.3
+   1.11.2

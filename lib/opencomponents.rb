@@ -1,4 +1,5 @@
-require 'rest-client'
+require 'json'
+require 'net/http'
 
 require 'opencomponents/component'
 require 'opencomponents/rendered_component'
@@ -14,7 +15,7 @@ module OpenComponents
   DEFAULT_TIMEOUT = 5
 
   # Internal: Custom exception class to raise in the event a component cannot be
-  #   found in the registry.
+  # found in the registry.
   ComponentNotFound = Class.new(RuntimeError)
 
   # Internal: Custom exception class to raise for response timeouts.

@@ -1,3 +1,16 @@
+## 1.0.0.pre
+ * Changes:
+  * Dropped support for Ruby 1.9.3.
+  * Dropped `rest-client` dependency.
+  * Request headers now use string keys instead of symbols.
+    ```ruby
+    # Old
+    { accept_language: 'en_us' }
+
+    # New
+    { 'Accept-Language' => 'en_us' }
+    ```
+
 ## 0.5.0
  * Changes:
   * OpenComponents::PrerenderedComponent is now OpenComponents::UnrenderedComponent

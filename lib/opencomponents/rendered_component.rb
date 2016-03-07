@@ -5,7 +5,7 @@ module OpenComponents
     attr_reader :html
 
     # Public: Executes a request for the Component against the configured
-    #   registry and sets the component attributes.
+    # registry and sets the component attributes.
     #
     # Examples
     #

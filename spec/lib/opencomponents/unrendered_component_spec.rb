@@ -7,7 +7,7 @@ RSpec.describe OpenComponents::UnrenderedComponent do
         before do
           stub_request(:get, "http://localhost:3030/foobar/").
             with(
-              headers: {'Accept'=>'application/vnd.oc.unrendered+json', 'Accept-Encoding'=>'gzip, deflate', 'User-Agent'=>'Ruby'},
+              headers: {'Accept'=>'application/vnd.oc.unrendered+json'},
               query: {name: 'foobar'}
             ).
             to_return(status: 200, body: '{"href":"http://localhost:3030/foobar?name=foobar","type":"oc-component-local","version":"1.0.0","requestVersion":"","data":{"name":"foobar"},"template":{"src":"http://localhost:3030/foobar/1.0.0/static/template.js","type":"jade","key":"0fe4b3fb2d6c0810f0d97a222a7e61eb91243bea"},"renderMode":"unrendered"}', headers: {})
@@ -52,7 +52,7 @@ RSpec.describe OpenComponents::UnrenderedComponent do
         before do
           stub_request(:get, "http://localhost:3030/foobar/").
             with(
-              headers: {'Accept'=>'application/vnd.oc.unrendered+json', 'Accept-Encoding'=>'gzip, deflate', 'User-Agent'=>'Ruby'}).
+              headers: {'Accept'=>'application/vnd.oc.unrendered+json'}).
             to_return(status: 200, body: '{"href":"http://localhost:3030/foobar","type":"oc-component-local","version":"1.0.0","requestVersion":"","data":{"name":"Todd"},"template":{"src":"http://localhost:3030/foobar/1.0.0/static/template.js","type":"jade","key":"0fe4b3fb2d6c0810f0d97a222a7e61eb91243bea"},"renderMode":"unrendered"}', headers: {})
         end
 
@@ -97,7 +97,7 @@ RSpec.describe OpenComponents::UnrenderedComponent do
         before do
           stub_request(:get, "http://localhost:3030/foobar/1.0.0").
             with(
-              headers: {'Accept'=>'application/vnd.oc.unrendered+json', 'Accept-Encoding'=>'gzip, deflate', 'User-Agent'=>'Ruby'},
+              headers: {'Accept'=>'application/vnd.oc.unrendered+json'},
               query: {name: 'foobar'}
             ).
             to_return(status: 200, body: '{"href":"http://localhost:3030/foobar/1.0.0?name=foobar","type":"oc-component-local","version":"1.0.0","requestVersion":"1.0.0","data":{"name":"foobar"},"template":{"src":"http://localhost:3030/foobar/1.0.0/static/template.js","type":"jade","key":"0fe4b3fb2d6c0810f0d97a222a7e61eb91243bea"},"renderMode":"unrendered"}', headers: {})
@@ -142,7 +142,7 @@ RSpec.describe OpenComponents::UnrenderedComponent do
         before do
           stub_request(:get, "http://localhost:3030/foobar/1.0.0").
             with(
-              headers: {'Accept'=>'application/vnd.oc.unrendered+json', 'Accept-Encoding'=>'gzip, deflate', 'User-Agent'=>'Ruby'}).
+              headers: {'Accept'=>'application/vnd.oc.unrendered+json'}).
             to_return(status: 200, body: '{"href":"http://localhost:3030/foobar/1.0.0","type":"oc-component-local","version":"1.0.0","requestVersion":"1.0.0","data":{"name":"Todd"},"template":{"src":"http://localhost:3030/foobar/1.0.0/static/template.js","type":"jade","key":"0fe4b3fb2d6c0810f0d97a222a7e61eb91243bea"},"renderMode":"unrendered"}', headers: {})
         end
 
@@ -185,7 +185,7 @@ RSpec.describe OpenComponents::UnrenderedComponent do
     context 'for a missing component' do
       before do
         stub_request(:get, "http://localhost:3030/foo/").
-          with(headers: {'Accept'=>'application/vnd.oc.unrendered+json', 'Accept-Encoding'=>'gzip, deflate', 'User-Agent'=>'Ruby'}).
+          with(headers: {'Accept'=>'application/vnd.oc.unrendered+json'}).
           to_return(status: 404, body: "", headers: {})
       end
 
@@ -197,21 +197,34 @@ RSpec.describe OpenComponents::UnrenderedComponent do
     end
 
     context 'for a registry timeout' do
-      before do
-        stub_request(:get, "http://localhost:3030/foo/").to_timeout
-      end
-
       subject { described_class.new('foo').load }
 
-      it 'raises an exception' do
-        expect { subject }.to raise_exception(OpenComponents::RegistryTimeout)
+      context 'HTTP 408' do
+        before do
+          stub_request(:get, "http://localhost:3030/foo/").
+            to_return(status: 408, body: "", headers: {})
+        end
+
+        it 'raises an exception' do
+          expect { subject }.to raise_exception(OpenComponents::RegistryTimeout)
+        end
+      end
+
+      context 'Connection Timeout' do
+        before do
+          stub_request(:get, "http://localhost:3030/foo/").to_timeout
+        end
+
+        it 'raises an exception' do
+          expect { subject }.to raise_exception(OpenComponents::RegistryTimeout)
+        end
       end
     end
 
     context 'with custom HTTP headers' do
       let!(:stub) do
         stub_request(:get, "http://localhost:3030/foobar/").
-          with(:headers => {'Accept'=>'application/vnd.oc.unrendered+json', 'Accept-Encoding'=>'gzip, deflate', 'Accept-Language'=>'emoji', 'User-Agent'=>'Ruby'}).
+          with(:headers => {'Accept'=>'application/vnd.oc.unrendered+json'}).
           to_return(:status => 200, :body => '{"href":"http://localhost:3030/foobar/1.0.0","type":"oc-component-local","version":"1.0.0","requestVersion":"","data":{"name":"Todd"},"template":{"src":"http://localhost:3030/foobar/1.0.0/static/template.js","type":"jade","key":"0fe4b3fb2d6c0810f0d97a222a7e61eb91243bea"},"renderMode":"unrendered"}', :headers => {})
       end
 
@@ -276,7 +289,7 @@ RSpec.describe OpenComponents::UnrenderedComponent do
     before do
         stub_request(:get, "http://localhost:3030/foobar/").
           with(
-            headers: {'Accept'=>'application/vnd.oc.unrendered+json', 'Accept-Encoding'=>'gzip, deflate', 'User-Agent'=>'Ruby'},
+            headers: {'Accept'=>'application/vnd.oc.unrendered+json'},
             query: {name: 'foobar'}
           ).
           to_return(status: 200, body: '{"href":"http://foo.com/bar?name=foobar","type":"some-oc-type","version":"1.0.2","requestVersion":"","data":{"name":"foobar"},"template":{"src":"http://foo.com/bar/1.0.2/static/template.js","type":"jade","key":"0fe4b3fb2d6c0810f0d97a222a7e61eb91243bea"},"renderMode":"unrendered"}', headers: {})

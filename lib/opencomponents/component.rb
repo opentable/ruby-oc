@@ -1,6 +1,9 @@
 module OpenComponents
   # Wrapper object for a component fetched from an OC registry.
   class Component
+    REGISTRY_TIMEOUT_MESSAGE = 'The registry took too long to respond.'.freeze #:nodoc:
+    BLANK = ''.freeze #:nodoc:
+
     # Public: Gets/sets the String name of the component.
     attr_accessor :name
 
@@ -13,43 +16,40 @@ module OpenComponents
     # Public: Gets/sets a Hash of headers to send in the component request.
     attr_accessor :headers
 
-    # Public: Returns the String URL of the requested component.
+    # Public: Gets the String URL of the requested component.
     attr_reader :href
 
-    # Public: Returns the String version of the component as served by the
-    #   registry.
+    # Public: Gets the String version of the component as served by the
+    # registry.
     attr_reader :registry_version
 
-    # Public: Returns the String type of the component as served by the
-    #   registry.
+    # Public: Gets the String type of the component as served by the
+    # registry.
     attr_reader :type
 
-    # Public: Returns the String render mode of the component as served by the
-    #   registry. Generally either `rendered` or `unrendered`.
+    # Public: Gets the String render mode of the component as served by the
+    # registry. Generally either `rendered` or `unrendered`.
     attr_reader :render_mode
 
     # Public: Initializes a new Component subclass.
     #
     # name - The String name of the component to request.
-    # opts - A Hash of options to use when requesting the component
-    #   (default: {}).
-    #        :params  - A Hash of parameters to send in the component request
-    #          (optional, default: {}).
-    #        :version - The String version of the component to request
-    #          (optional, default: '').
-    #        :headers - A Hash of HTTP request headers to include in the
-    #          component request (optional, default: {}).
-    def initialize(name, opts = {})
+    #
+    # Options
+    #   params  - A Hash of parameters to send in the component request (default: {}).
+    #   version - The String version of the component to request (default: '').
+    #   headers - A Hash of HTTP request headers to include in the request (default: {}).
+    def initialize(name, params: {}, version: nil, headers: {})
       @name    = name
-      @params  = opts[:params]  || {}
-      @version = opts[:version] || ''
-      @headers = opts[:headers] || {}
+      @params  = params
+      @version = version || BLANK
+      @headers = headers
     end
 
     # Public: Returns the String value of `requestVersion` from a component
-    #   response, `nil` if not present.
+    # response, `nil` if not present.
     def request_version
-      @request_version == '' ? nil : @request_version
+      @request_version == BLANK ? nil : @request_version
     end
 
     # Public: Resets all component attributes from a registry response to `nil`.
@@ -69,7 +69,7 @@ module OpenComponents
     end
 
     # Public: Resets all component attributes and reloads them from a registry
-    #   response.
+    # response.
     #
     # Examples
     #
@@ -82,11 +82,11 @@ module OpenComponents
       load
     end
 
-    protected
+    private
 
     # Internal: Executes a component request and sets attributes common to all
-    #   component render modes. Public-facing `#load` methods exist on Component
-    #   subclasses.
+    # component render modes. Public-facing `#load` methods exist on Component
+    # subclasses.
     #
     # Returns the Component.
     def load
@@ -102,43 +102,60 @@ module OpenComponents
     # Internal: Builds the URL to send a component request to.
     #
     # Returns the String URL to request a component from.
-    def url
-      File.join(OpenComponents.config.registry, name, version)
+    def uri
+      URI(File.join(OpenComponents.config.registry, name, version)).tap do |u|
+        u.query = URI.encode_www_form(params)
+      end
     end
 
     # Internal: Executes a component request against the configured registry.
     #
     # Returns a response body String.
     # Raises OpenComponents::ComponentNotFound if the registry responds with a
-    #   404.
+    # 404.
     # Raises OpenComponents::RegistryTimeout if the request times out.
     def response
-      request_headers = headers.merge(params: params)
+      _response = Net::HTTP.start(
+        uri.host,
+        uri.port,
+        read_timeout: OpenComponents.config.timeout,
+        open_timeout: OpenComponents.config.timeout
+      ) { |http| http.request request }
 
-      RestClient::Request.execute(
-        method: :get,
-        url: url,
-        timeout: OpenComponents.config.timeout,
-        headers: request_headers
-      )
-    rescue RestClient::ResourceNotFound => e
-      fail ComponentNotFound, e.message
-    rescue RestClient::RequestTimeout => e
-      fail RegistryTimeout, e.message
+      case _response
+      when Net::HTTPNotFound
+        fail ComponentNotFound, "Component #{name} not found."
+      when Net::HTTPRequestTimeOut
+        fail_with_timeout
+      end
+
+      _response
+    rescue Timeout::Error
+      fail_with_timeout
+    end
+
+    # Internal: Helper method for building the component request. Includes
+    # all params and headers.
+    def request
+      Net::HTTP::Get.new(uri).tap do |r|
+        headers.each { |k, v| r[k] = v }
+      end
     end
 
     # Internal: Helper method for converting and memoizing registry response
-    #   data.
+    # data.
     #
     # Returns a Hash of registry response data.
     def response_data
-      @_response_data ||= JSON.parse(response)
+      @_response_data ||= JSON.parse(response.body)
     end
 
-    private
+    def fail_with_timeout
+      fail RegistryTimeout, REGISTRY_TIMEOUT_MESSAGE
+    end
 
     # Internal: Whitelists instance variable names allowed to be reset when
-    #   calling `#flush!`.
+    # calling `#flush!`.
     #
     # Returns an Array of instance variable Symbols allowed to be reset.
     def flush_variables_whitelist

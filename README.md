@@ -15,10 +15,6 @@
 
 [6]:https://github.com/opentable/oc
 
-## Important
-This gem is still under heavy development and the API is likely to change at any
-time.
-
 ## Getting Started
 Add the gem to your Gemfile and run `bundle install`:
 ```ruby
@@ -48,7 +44,7 @@ component = OpenComponents::RenderedComponent.new(
   'my-awesome-component',
   params: {name: 'Kate'},
   version: '1.0.2',
-  headers: {accept_language: 'emoji'}
+  headers: {'Accept-Language' => 'emoji'}
 )
 ```
 

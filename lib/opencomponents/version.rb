@@ -1,3 +1,3 @@
 module OpenComponents
-  VERSION = '0.5.0' # :nodoc:
+  VERSION = '1.0.0.pre'.freeze # :nodoc:
 end

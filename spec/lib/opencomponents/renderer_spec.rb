@@ -8,12 +8,10 @@ RSpec.describe OpenComponents::Renderer do
   describe '#render_component' do
     before do
       stub_request(:get, "http://localhost:3030/foobar/1.0.1").
-        with(headers: {'Accept'=>'*/*; q=0.5, application/xml', 'Accept-Encoding'=>'gzip, deflate', 'User-Agent'=>'Ruby'},
-            query: {name: 'foobar'}).
+        with(query: {name: 'foobar'}).
         to_return(status: 200, body: '{"href":"http://localhost:3030/foobar/1.0.1?name=foobar","type":"oc-component-local","version":"1.0.1","requestVersion":"1.0.1","html":"<oc-component href=\"http://localhost:3030/foobar/1.0.1?name=foobar\" data-hash=\"0fe4b3fb2d6c0810f0d97a222a7e61eb91243bea\" id=\"8502960618\" data-rendered=\"true\" data-version=\"1.0.0\"><h1>ohai, my name is foobar</h1></oc-component>","renderMode":"rendered"}', headers: {})
 
       stub_request(:get, "http://localhost:3030/barfoo/").
-        with(headers: {'Accept'=>'*/*; q=0.5, application/xml', 'Accept-Encoding'=>'gzip, deflate', 'User-Agent'=>'Ruby'}).
         to_return(status: 404, body: "", headers: {})
     end
 
